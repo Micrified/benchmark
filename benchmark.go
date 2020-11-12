@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -31,6 +30,7 @@ import (
 	"unicode"
 	"math"
 	"bufio"
+	"runtime"
 )
 
 
@@ -54,6 +54,7 @@ type Benchmark struct {
 	Path        string
 	Runtime     float64
 	Uncertainty float64
+	Evaluated   bool
 }
 
 
@@ -166,6 +167,11 @@ func evaluate_benchmark (benchmark *Benchmark, cfg Configuration, repeats int) e
 	var exists_executable bool 
 	var err error
 	var cmd *exec.Cmd
+
+	// Obtain OS 
+	if os := runtime.GOOS; os != "linux" {
+		return errors.New(fmt.Sprintf("Evaluation only supported on linux, not %s", os))
+	}
 
 	// Create output file
 	output_file_name := benchmark.Name + ".txt"
@@ -365,7 +371,7 @@ func Init_Benchmarks (cfg Configuration) ([]*Benchmark, error) {
 
 		// Assume sub-directory is a benchmark
 		n := file.Name()
-		b := Benchmark{Name: n, Path: path(cfg.Src, n), Runtime: 0.0, Uncertainty: 0.0}
+		b := Benchmark{Name: n, Path: path(cfg.Src, n), Runtime: 0.0, Uncertainty: 0.0, Evaluated: false}
 		benchmarks = append(benchmarks, &b)
 	}
 
@@ -400,6 +406,8 @@ func Get_Unevaluated_Benchmarks (cfg Configuration, benchmarks []*Benchmark) ([]
 		err = get_benchmark_results(cfg, b)
 		if nil != err {
 			return unevaluated_benchmarks, errors.New("Unable to read results: " + err.Error())
+		} else {
+			b.Evaluated = true
 		}
 	}
 
