@@ -57,6 +57,12 @@ type Benchmark struct {
 	Evaluated   bool
 }
 
+// Encodes a benchmark, and how many times it should be repeated to estimate a WCET
+type Work struct { 
+	Benchmark      *Benchmark
+	Iterations     int
+}
+
 
 /*
  *******************************************************************************
