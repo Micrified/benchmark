@@ -50,11 +50,11 @@ type Configuration struct {
 
 // Describes a benchmark
 type Benchmark struct {
-	Name        string
-	Path        string
-	Runtime     float64
-	Uncertainty float64
-	Evaluated   bool
+	Name           string
+	Path           string
+	Runtime_us     float64
+	Uncertainty    float64
+	Evaluated      bool
 }
 
 // Encodes a benchmark, and how many times it should be repeated to estimate a WCET
@@ -242,7 +242,8 @@ func get_benchmark_results (cfg Configuration, benchmark *Benchmark) error {
 			value = value * 10 + float64(byte(d - '0'))
 		}
 
-		return value / math.Pow10(decimal_offset)
+		// Divide the value by 1000.0 to convert to us
+		return (value / math.Pow10(decimal_offset))
 	}
 
 	// Inline function that returns the first matched regexp instance
@@ -289,7 +290,10 @@ func get_benchmark_results (cfg Configuration, benchmark *Benchmark) error {
 		if nil != err {
 			continue
 		} else {
-			benchmark.Runtime = get_float(match)
+
+			// Get the float value, then convert it to microseconds
+			// since it comes in nanoseconds
+			benchmark.Runtime_us = (get_float(match) / 1000.0)
 			found_params++
 		}
 
@@ -377,7 +381,7 @@ func Init_Benchmarks (cfg Configuration) ([]*Benchmark, error) {
 
 		// Assume sub-directory is a benchmark
 		n := file.Name()
-		b := Benchmark{Name: n, Path: path(cfg.Src, n), Runtime: 0.0, Uncertainty: 0.0, Evaluated: false}
+		b := Benchmark{Name: n, Path: path(cfg.Src, n), Runtime_us: 0.0, Uncertainty: 0.0, Evaluated: false}
 		benchmarks = append(benchmarks, &b)
 	}
 
